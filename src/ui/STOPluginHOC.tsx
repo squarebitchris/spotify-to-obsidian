@@ -1,5 +1,5 @@
 import * as React from "react";
-import { deconstructUrl, getTrack, getTrackFeatures, getArtist, getAlbum, buildNote, findBearerToken } from '../utils';
+import { deconstructUrl, getTrack, getTrackFeatures, getAudioAnalysis, getArtist, getAlbum, buildNote, findBearerToken } from '../utils';
 
 export default function STOPluginHOC(): JSX.Element {
   // Input State
@@ -8,6 +8,7 @@ export default function STOPluginHOC(): JSX.Element {
   // Query state
   const [track, setTrack] = React.useState({});
   const [audioFeatures, setAudioFeatures] = React.useState({});
+  const [audioAnalysis, setAudioAnalysis] = React.useState({});
   const [artist, setArtist] = React.useState({});
   const [album, setAlbum] = React.useState({});
   // Request state
@@ -37,11 +38,13 @@ export default function STOPluginHOC(): JSX.Element {
     const artistId = trackData.artists[0].id;
     const albumId = trackData.album.id;
     const audioFeaturesData = await getTrackFeatures(trackId, bearerToken);
+    const audioAnalysisData = await getAudioAnalysis(trackId, bearerToken);
     const artistData = await getArtist(artistId, bearerToken);
     const albumData = await getAlbum(albumId, bearerToken);
     // Update state
     setTrack(trackData);
     setAudioFeatures(audioFeaturesData);
+    setAudioAnalysis(audioAnalysisData);
     setArtist(artistData);
     setAlbum(albumData);
     // Reset input
@@ -55,7 +58,7 @@ export default function STOPluginHOC(): JSX.Element {
     // Set loading state
     setIsLoading(true);
     // Create note
-    const note = await buildNote(track, artist, album, audioFeatures);
+    const note = await buildNote(track, artist, album, audioFeatures, audioAnalysis);
     console.log('Note Methods', note);
     setIsLoading(false);
     return null;

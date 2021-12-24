@@ -1,5 +1,4 @@
 // src/utils.ts
-
 import { request } from 'obsidian';
 import { App, Notice, TFile } from "obsidian";
 
@@ -40,6 +39,17 @@ import { App, Notice, TFile } from "obsidian";
  export const getTrackFeatures = async (id: string, bearerToken: string): Promise<TrackFeatures> => {
   const featureResponse = await requestAPI(`https://api.spotify.com/v1/audio-features/${id}`, bearerToken);
   return featureResponse;
+}
+
+/**
+ * Fetches a track audio analysis from the Spotify API
+ * @param {string} id - The trackId to fetch data from the Spotify API
+ * @param {string} bearerToken - The bearer token
+ * @returns {AudioAnalysis} - The track features from the Spotify API
+ */
+ export const getAudioAnalysis = async (id: string, bearerToken: string): Promise<AudioAnalysis> => {
+  const audioAnalysisResponse = await requestAPI(`https://api.spotify.com/v1/audio-analysis/${id}`, bearerToken);
+  return audioAnalysisResponse;
 }
 
 /**
@@ -97,7 +107,7 @@ const requestAPI = async (url: string, bearerToken: string): Promise<T> => {
  * @param {object} track - The track data from the Spotify API
  * @returns {Note} - Obsidian Note
  */
- export async function buildNote(track: any, artist: any, album: any, audioFeatures: any): Promise<TFile> {
+ export async function buildNote(track: any, artist: any, album: any, audioFeatures: any, audioAnalysis: any): Promise<TFile> {
   // Clean up the track data
   const stockIllegalSymbols = /[\\/:|#^[\]]/g;
   const trackName = track.name.replace(stockIllegalSymbols, '');
@@ -108,8 +118,23 @@ const requestAPI = async (url: string, bearerToken: string): Promise<T> => {
 
   const artistImage = artist.images[0] ? artist.images[0].url : '';
   const albumImage = album.images[0] ? album.images[0].url : '';
+
+  const PITCH_NOTATION = {
+    0: 'C',
+    1: 'C#/Db',
+    2: 'D',
+    3: 'D#/Eb',
+    4: 'E',
+    5: 'F',
+    6: 'F#/Gb',
+    7: 'G',
+    8: 'G#/Ab',
+    9: 'A',
+    10: 'A#/Bb',
+    11: 'B',
+  }
   
-  // console.log(genres)
+  console.log('audioAnalysis', audioAnalysis)
   const { 
     acousticness, 
     danceability, 
@@ -119,6 +144,14 @@ const requestAPI = async (url: string, bearerToken: string): Promise<T> => {
     tempo, 
     time_signature
   } = audioFeatures;
+
+  const {
+    bars,
+    // beats,
+    sections,
+    // segments,
+    // tatums
+  } = audioAnalysis;
 
   console.log('attempting to create file: ' + normalizedPath);
   try {
@@ -173,12 +206,50 @@ const requestAPI = async (url: string, bearerToken: string): Promise<T> => {
     templateContents += `- Tempo: ${tempo}\n`;
     templateContents += `- Time Signature: ${time_signature}\n`;
 
-    // const createdFile = await vault.create(normalizedPath, templateContents
-    //   .replace(/{{\s*title\s*}}/gi, filename) );
+    // Audio Analysis
+    templateContents += '\n\n';
+    templateContents += '---\n';
+    templateContents += '\n\n';
+    templateContents += '## Audio Analysis\n'
+    templateContents += '\n\n';
     
+    // Sections
+    // Sections are defined by large variations in rhythm or timbre, e.g. chorus, verse, bridge, guitar solo, etc. 
+    // Each section contains its own descriptions of tempo, key, mode, time_signature, and loudness.
+    templateContents += '\n\n';
+    templateContents += '### Sections\n';
+    templateContents += '\n\n';
+    templateContents += 'Start | Duration | Tempo | Loudness | Key\n';
+    templateContents += ':----:|:----:|:----:|:----:|:----:\n';
+    sections.map((section: any) => {
+      templateContents += `${section.start} | ${section.duration} | ${section.tempo} | ${section.loudness} | ${PITCH_NOTATION[section.key]}\n`;
+    });
+
+    // Bars
+    // The time intervals of the bars throughout the track. A bar (or measure) is a segment of time defined as a given number of beats.
+    templateContents += '\n\n';
+    templateContents += '### Bars\n';
+    templateContents += '\n\n';
+    templateContents += 'Start | Duration\n';
+    templateContents += ':----:|:----:\n';
+    bars.map((bar: any) => {
+      templateContents += `${bar.start} | ${bar.duration}\n`;
+    });
+
+    // Beats
+    // The time intervals of beats throughout the track. A beat is the basic time unit of a piece of music; for example, 
+    // each tick of a metronome. Beats are typically multiples of tatums.
+    // templateContents += '\n\n';
+    // templateContents += '### Beats\n';
+    // templateContents += '\n\n';
+    // templateContents += 'Start | Duration\n';
+    // templateContents += ':----:|:----:\n';
+    // beats.map((bar: any) => {
+    //   templateContents += `${bar.start} | ${bar.duration}\n`;
+    // });
+
     const app = window.app as App;
     const { vault } = app;
-
     const createdFile = await vault.create(
       normalizedPath,
       templateContents,
