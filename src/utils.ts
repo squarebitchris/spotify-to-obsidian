@@ -92,11 +92,11 @@ export const getPlaylistTracks = async (id: string, bearerToken: string): Promis
 // Obsidian Note Functions
 
 /**
- * Creates a Obsidian Note from Spotify data
+ * Creates a Obsidian Note from Spotify track
  * @param {object} track - The track data from the Spotify API
  * @returns {Note} - Obsidian Note
  */
- export async function buildNote(track: any, artist: any, album: any, audioFeatures: any, audioAnalysis: any): Promise<TFile> {
+ export async function buildSongNote(track: any, artist: any, album: any, audioFeatures: any, audioAnalysis: any): Promise<TFile> {
   // Clean up the track data
   const stockIllegalSymbols = /[\\/:|#^[\]]/g;
   const trackName = track.name.replace(stockIllegalSymbols, '');
@@ -253,6 +253,73 @@ export const getPlaylistTracks = async (id: string, bearerToken: string): Promis
     new Notice("Unable to create new file.");
   }
 }
+
+/**
+ * Creates a Obsidian Note from Spotify playlist
+ * @param {object} playlist - The track data from the Spotify API
+ * @returns {Note} - Obsidian Note
+ */
+ export async function buildPlaylistNote(playlist:any, playlistTracks:any): Promise<TFile> {
+  // Clean up the playlist data
+  const stockIllegalSymbols = /[\\/:|#^[\]]/g;
+  const playlistName = playlist.name.replace(stockIllegalSymbols, '');
+  const normalizedPath = `Playlist - ${playlistName}.md`;
+  const tracks = playlistTracks || [];
+
+  // const genreArray = artist.genres || [''];
+  // const genres = genreArray.map(genre => titleCase(genre));
+  // const artistImage = artist.images[0] ? artist.images[0].url : '';
+  // const albumImage = album.images[0] ? album.images[0].url : '';
+  // templateContents += `genres:\n`;
+  // genres.map((tag:string) => (templateContents += `- ${tag}\n`));
+
+  console.log('attempting to create file: ' + normalizedPath);
+  try {
+    let templateContents = '---\n';
+    templateContents += `tags:\n`;
+    templateContents += `- literature\n`;
+    templateContents += `- playlists\n`;
+    templateContents += `status: unprocessed\n`;
+    templateContents += '---\n';
+    templateContents += `- Note Title: ${normalizedPath}\n`;
+    templateContents += `- Playlist Title: ${playlistName}\n`;
+    templateContents += `- Source Link: [Link](${playlist.href}) \n`;
+    templateContents += `- Total Tracks: ${playlist.tracks.total}\n`;
+    templateContents += '---\n';
+    templateContents += '\n\n';
+    templateContents += '## Notes\n';
+    templateContents += '\n\n';
+    templateContents += '---\n';
+    templateContents += '\n\n';
+    templateContents += '### Tracks Info\n'
+    templateContents += '\n\n';
+    templateContents += 'Image | Artist | Track Name \n';
+    templateContents += ':----:|:----:|:----:\n';
+    tracks.map((track: any) => {
+      const { artists, album } = track.track;
+      const artistTitle = artists.map((artist: any) => artist.name).join(', ');
+      const albumImage = album.images[0] ? album.images[album.images.length - 1].url : '';
+      templateContents += ` ![](${albumImage}) | ${artistTitle} | ${track.track.name}\n`;
+    });
+
+    templateContents += '---\n';
+    const app = window.app as App;
+    const { vault } = app;
+    const createdFile = await vault.create(
+      normalizedPath,
+      templateContents,
+    );
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (app as any).foldManager.save(createdFile, "");
+
+    new Notice("Note created successfully");
+    return createdFile;
+  } catch (err) {
+    console.error(`Failed to create file: '${normalizedPath}'`, err);
+    new Notice("Unable to create new file.");
+  }
+}
+
 
 function titleCase(str) {
   const splitStr = str.toLowerCase().split(' ');
