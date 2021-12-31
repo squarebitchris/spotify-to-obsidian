@@ -1,6 +1,6 @@
 {
   "name": "spotify-to-obsidian",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Sync Spotify data into Obsidian",
   "author": "squarebitchris",
   "main": "main.js",
