@@ -1,5 +1,5 @@
 import * as React from "react";
-import { deconstructUrl, getTrack, getTrackFeatures, getAudioAnalysis, getArtist, getAlbum, buildSongNote, buildPlaylistNote, findBearerToken, getPlaylist, getAllPlaylistTracks } from '../utils';
+import { deconstructUrl, getTrack, getTrackFeatures, getAudioAnalysis, getArtist, getAlbum, buildSongNote, buildPlaylistNote, findBearerToken, getPlaylist, getAllPlaylistTracks, getWikipediaInfo } from '../utils';
 
 export default function STOPluginHOC(): JSX.Element {
   // Input State
@@ -38,6 +38,10 @@ export default function STOPluginHOC(): JSX.Element {
     // Search Spotify for track information
     // Acquire bearer token
     const bearerToken = findBearerToken();
+
+
+    // await getWikipediaInfo('(band) Low');
+
     // Query Spotify API for track info
     const trackData = await getTrack(trackId, bearerToken);
     const artistId = trackData.artists[0].id;
