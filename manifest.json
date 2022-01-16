@@ -2,7 +2,7 @@
   "id": "spotify-to-obsidian",
   "name": "Spotify To Obsidian",
   "description": "Sync Spotify data into Obsidian",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "author": "squarebitchris",
   "authorUrl": "https://github.com/squarebitchris/",
   "isDesktopOnly": false,

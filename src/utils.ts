@@ -15,6 +15,27 @@ import { App, Notice, TFile } from "obsidian";
   const trackResponse = await requestAPI(`https://api.spotify.com/v1/tracks/${id}`, bearerToken);
   return trackResponse;
 }
+/**
+ * Fetches wikipedia information about the artist
+ * @param {string} artistName - The artist to fetch information about
+ * @returns {Object} - The wikipedia information about the artist
+*/
+ export const getWikipediaInfo = async (artistName: ArtistName): Promise<WikipediaInfo> => {
+  // const wikiUrl = new URL(`https://en.wikipedia.org/w/api.php?action=query&format=json&prop=extracts&exintro=&explaintext=&titles=${artistName}`);
+  // try {
+  //   const wikiResponse = await request(wikiUrl.href);
+  //   console.log('wikiResponse', wikiResponse)
+  //   const wikiData = JSON.parse(wikiResponse);
+  //   console.log('wikiData', wikiData);
+  //   const wikiInfo = wikiData.query.pages[Object.keys(wikiData.query.pages)[0]];
+  //   console.log('wikiInfo', wikiInfo);
+  //   return wikiInfo;
+  // } catch (error) {
+  //   console.error(error);
+  //   return {};
+  // }
+  return artistName;
+}
 
 /**
  * Fetches artist from the Spotify API
@@ -89,8 +110,28 @@ export const getPlaylistTracks = async (id: string, bearerToken: string): Promis
   return playlistTracksResponse;
 }
 
-// Obsidian Note Functions
 
+// miliseconds to minutes:seconds
+export const msToMinSec = (ms: number): string => {
+  console.log('input', ms);
+  const minutes = Math.floor(ms / 60000);
+  const seconds = ((ms % 60000) / 1000).toFixed(0);
+  console.log('minutes', minutes);
+  console.log('seconds', seconds);
+  return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+}
+
+// seconds to minutes:seconds
+export const secToMinSec = (sec: number): string => {
+  console.log('input', sec);
+  const minutes = Math.floor(sec / 60);
+  const seconds = (sec % 60).toFixed(0);
+  console.log('minutes', minutes);
+  console.log('seconds', seconds);
+  return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
+}
+
+// Obsidian Note Functions
 /**
  * Creates a Obsidian Note from Spotify track
  * @param {object} track - The track data from the Spotify API
@@ -150,6 +191,13 @@ export const getPlaylistTracks = async (id: string, bearerToken: string): Promis
     templateContents += `- songs\n`;
     templateContents += `genres:\n`;
     genres.map((tag:string) => (templateContents += `- ${tag}\n`));
+    templateContents += `audio-acousticness: ${acousticness}\n`;
+    templateContents += `audio-danceability: ${danceability}\n`;
+    templateContents += `audio-energy: ${energy}\n`;
+    templateContents += `audio-instrumentalness: ${instrumentalness}\n`;
+    templateContents += `audio-speechiness: ${speechiness}\n`;
+    templateContents += `audio-tempo: ${tempo}\n`;
+    templateContents += `song-duration: ${msToMinSec(track.duration_ms)}\n`;
     templateContents += `status: unprocessed\n`;
     templateContents += '---\n';
     templateContents += `- Note Title: ${normalizedPath}\n`;
@@ -159,23 +207,20 @@ export const getPlaylistTracks = async (id: string, bearerToken: string): Promis
     templateContents += `- Genres: \n`;
     genres.map((tag:string) => (templateContents += `  - [[${tag}]]\n`));
     templateContents += `- Source Link: [Link](${track.href}) \n`;
-    templateContents += `- Duration: ${track.duration_ms}ms\n`;
+    templateContents += `- Duration: ${msToMinSec(track.duration_ms)}\n`;
     templateContents += `- Track Popularity: ${track.popularity}\n`;
     templateContents += '---\n';
-    templateContents += '\n\n';
     templateContents += '## Notes\n';
-    templateContents += '\n\n';
+    templateContents += '\n';
     templateContents += '---\n';
-    templateContents += '\n\n';
     templateContents += '### Artist Info\n'
     templateContents += `- Artist: ${artist.name}\n`;
     templateContents += `- Followers: ${artist.followers.total}\n`;
     templateContents += `- Popularity: ${artist.popularity}\n`;
     templateContents += '- Images:\n';
     templateContents += `  - ![](${artistImage})\n`
-    templateContents += '\n\n';
+    templateContents += '\n';
     templateContents += '---\n';
-    templateContents += '\n\n';
     templateContents += '### Album Info\n'
     templateContents += `- Album: ${album.name}\n`;
     templateContents += `- Release Date: ${album.release_date}\n`;
@@ -183,9 +228,8 @@ export const getPlaylistTracks = async (id: string, bearerToken: string): Promis
     templateContents += `- Label: ${album.label}\n`;
     templateContents += '- Images:\n';
     templateContents += `  - ![](${albumImage})\n`
-    templateContents += '\n\n';
+    templateContents += '\n';
     templateContents += '---\n';
-    templateContents += '\n\n';
     templateContents += '### Audio Features\n';
     templateContents += `- Acousticness: ${acousticness}\n`;
     templateContents += `- Danceability: ${danceability}\n`;
@@ -195,34 +239,69 @@ export const getPlaylistTracks = async (id: string, bearerToken: string): Promis
     templateContents += `- Tempo: ${tempo}\n`;
     templateContents += `- Time Signature: ${time_signature}\n`;
 
+    templateContents += '\n';
+    templateContents += '```chart\n';
+    templateContents += '    type: bar\n';
+    templateContents += '    labels: [Accousticness, Danceability, Energy, Instrumentalness, Speechiness]\n';
+    templateContents += '    series: \n';
+    templateContents += '      - title: Audio Features\n';
+    templateContents += `        data: [${acousticness}, ${danceability}, ${energy}, ${instrumentalness}, ${speechiness}]\n`;
+    templateContents += '```\n';
+    templateContents += '\n';
+
     // Audio Analysis
-    templateContents += '\n\n';
+    templateContents += '\n';
     templateContents += '---\n';
-    templateContents += '\n\n';
     templateContents += '## Audio Analysis\n'
-    templateContents += '\n\n';
-    
     // Sections
     // Sections are defined by large variations in rhythm or timbre, e.g. chorus, verse, bridge, guitar solo, etc. 
     // Each section contains its own descriptions of tempo, key, mode, time_signature, and loudness.
-    templateContents += '\n\n';
+    const sectionMaps = [];
+    const sectionDurationIds = [];
+    templateContents += '\n';
     templateContents += '### Sections\n';
-    templateContents += '\n\n';
-    templateContents += 'Start | Duration | Tempo | Loudness | Key\n';
-    templateContents += ':----:|:----:|:----:|:----:|:----:\n';
-    sections.map((section: any) => {
-      templateContents += `${section.start} | ${section.duration} | ${section.tempo} | ${section.loudness} | ${PITCH_NOTATION[section.key]}\n`;
+    templateContents += '\n';
+    templateContents += 'Section | Start | Duration | Tempo | Loudness | Key\n';
+    templateContents += ':----:|:----:|:----:|:----:|:----:|:----:\n';
+    sections.map((section: any, index) => {
+      templateContents += `${index} | ${secToMinSec(section.start)} | ${section.duration} | ${section.tempo} | ${section.loudness} | ${PITCH_NOTATION[section.key]}\n`;
+      sectionMaps.push({ section_number: index, start: section.start, duration: section.duration, tempo: section.tempo, loudness: section.loudness, key: section.key});
+      sectionDurationIds.push(index);
     });
 
-    // Bars
-    // The time intervals of the bars throughout the track. A bar (or measure) is a segment of time defined as a given number of beats.
+    const sectionDurations = sections.map((section: any) => section.duration);
     templateContents += '\n\n';
-    templateContents += '### Bars\n';
+    templateContents += '```chart\n';
+    templateContents += '    type: bar\n';
+    templateContents += `    labels: [${sectionDurationIds}]\n`;
+    templateContents += '    series: \n';
+    templateContents += '      - title: Sections\n';
+    templateContents += `        data: [${sectionDurations}]\n`;
+    templateContents += '```\n';
     templateContents += '\n\n';
-    templateContents += 'Start | Duration\n';
-    templateContents += ':----:|:----:\n';
-    bars.map((bar: any) => {
-      templateContents += `${bar.start} | ${bar.duration}\n`;
+
+    // For each section, we need to get the bars that are within that section
+    // We need to get the bars that are within that section
+    sectionMaps.forEach((sectionMap: any) => {
+      const { section_number, start, duration } = sectionMap;
+      const sectionBars = bars.filter((bar: any) => {
+        return (bar.start >= start && bar.start <= (start + (duration + 1)));
+      });
+      // Bars
+      // The time intervals of the bars throughout the track. A bar (or measure) is a segment of time defined as a given number of beats.
+      templateContents += '\n\n';
+      templateContents += `### Section ${section_number} Bars\n`;
+      templateContents += `Section Count: ${sectionBars.length}\n`;
+      templateContents += `Section Time: ${secToMinSec(start)} -> ${secToMinSec(start + duration)}\n`;
+      templateContents += `Tempo: => ${sectionMap.tempo}\n`;
+      templateContents += `Loudness: => ${sectionMap.loudness}\n`;
+      templateContents += `Key: => ${PITCH_NOTATION[sectionMap.key]}\n`;
+      templateContents += '\n';
+      templateContents += 'Start | Duration\n';
+      templateContents += ':----:|:----:\n';
+      sectionBars.map((bar: any) => {
+        templateContents += `${secToMinSec(bar.start)} | ${bar.duration}\n`;
+      });
     });
 
     // Beats
