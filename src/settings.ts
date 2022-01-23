@@ -2,6 +2,8 @@
 
 import {App, PluginSettingTab, Setting} from 'obsidian'
 import STOPlugin from 'main'
+import { setupSpotifyAuth } from './utils';
+
 
 export interface STOSettings {
   bearerToken: string | null
@@ -36,6 +38,18 @@ export class STOSettingTab extends PluginSettingTab {
             this.plugin.settings.bearerToken = value
             await this.plugin.saveSettings()
           })
-      )
+    )
+
+
+    new Setting(containerEl)
+      .setName('Connect Spotify')
+      .setDesc('Connect to Spotify.')
+      .addButton(button =>
+        button
+          .setButtonText('Connect')
+          .onClick(async () => {
+            await setupSpotifyAuth()
+          })
+        )  
   }
 }

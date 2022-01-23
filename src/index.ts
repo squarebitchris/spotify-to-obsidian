@@ -5,6 +5,7 @@ import ReactDOM from "react-dom";
 
 import { DEFAULT_SETTINGS, STOSettings, STOSettingTab } from 'src/settings'
 import STOPluginHOC from "./ui/STOPluginHOC";
+import { getAccessToken, storeSpotifyToken } from "./utils";
 
 const VIEW_TYPE = "react-view-spotify";
 
@@ -45,6 +46,16 @@ export default class STOPlugin extends Plugin {
     this.registerView(
       VIEW_TYPE,
       (leaf: WorkspaceLeaf) => (this.view = new STOReactView(leaf))
+    );
+
+    this.registerObsidianProtocolHandler(
+      "spotify-auth",
+      async (params) => {
+        console.log('spotify-auth params returned', params);
+        const access_token = getAccessToken(params.hash);
+        console.log('spotify-auth access_token returned', access_token);
+        await storeSpotifyToken(access_token);
+      }
     );
 
     this.app.workspace.onLayoutReady(this.onLayoutReady.bind(this));

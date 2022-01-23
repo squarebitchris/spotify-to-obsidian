@@ -1,9 +1,8 @@
 // src/utils.ts
 import { request } from 'obsidian';
 import { App, Notice, TFile } from "obsidian";
-// import { Raindrop, RaindropList } from './models';
 
-// Spotify API Resource Fucntions
+// Spotify API Resource Functions
 
 /**
  * Fetches a track object from the Spotify API
@@ -510,3 +509,41 @@ function range(size, startAt = 0) {
 }
 
 
+// // Authentication Functions
+
+// Params:
+const authEndpoint = 'https://accounts.spotify.com/authorize';
+const OBSIDIAN_PROTOCOL = "obsidian://";
+const OBSIDIAN_AUTH_PROTOCOL_ACTION = "spotify-auth";
+const AUTH_REDIRECT_URI = `${OBSIDIAN_PROTOCOL}${OBSIDIAN_AUTH_PROTOCOL_ACTION}`;
+const CLIENT_ID = '43d0a1f3979e4916a25c4dee07d33c3a';
+// TODO - Change this to a specific scope
+const SCOPES = [
+  'user-read-private',
+  'user-read-email',
+  'playlist-read-private',
+  'playlist-read-collaborative',
+];
+
+
+// Spotify Auth Functions
+const openBrowserWindow = (url: string) => window.location.assign(url);
+
+export const setupSpotifyAuth = async (): Promise<void> => {
+  console.log('Setting up Spotify Auth');
+  const getAuthorizeHref = `${authEndpoint}?client_id=${CLIENT_ID}&redirect_uri=${AUTH_REDIRECT_URI}&scope=${SCOPES.join("%20")}&response_type=token`;
+  openBrowserWindow(getAuthorizeHref);
+}
+
+export const getAccessToken = (hash: string) => {
+  const params = new URLSearchParams(hash);
+  console.log('Params', params)
+  console.log('getHashParams', params.get('access_token'))
+  return params.get('access_token');
+}
+
+export const storeSpotifyToken = async (token: string) => {
+  window.app.plugins.plugins['spotify-to-obsidian'].settings.bearerToken = token;
+  await window.app.plugins.plugins['spotify-to-obsidian'].saveSettings()
+  new Notice("Logged into Spotify successfully");
+}
