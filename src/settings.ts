@@ -6,11 +6,17 @@ import { setupSpotifyAuth } from './utils';
 
 
 export interface STOSettings {
-  bearerToken: string | null
+  bearerToken: string | null,
+  songNoteTemplate: string | null,
+  albumNoteTemplate: string | null,
+  playlistNoteTemplate: string | null,
 }
 
 export const DEFAULT_SETTINGS: STOSettings = {
   bearerToken: null,
+  songNoteTemplate: null,
+  albumNoteTemplate: null,
+  playlistNoteTemplate: null,
 }
 
 export class STOSettingTab extends PluginSettingTab {
@@ -50,6 +56,47 @@ export class STOSettingTab extends PluginSettingTab {
           .onClick(async () => {
             await setupSpotifyAuth()
           })
-        )  
+        )
+     
+    // Template location Settings
+       
+    new Setting(containerEl)
+    .setName("Spotify Song template file location")
+    .setDesc("Choose the file to use as a template when creating a new note from a Spotify song.")
+    .addText((text) => {
+      text
+      .setPlaceholder('Example: Templates/Spotify Song Template')
+      .setValue(this.plugin.settings.songNoteTemplate)
+      .onChange(async value => {
+        this.plugin.settings.songNoteTemplate = value
+        await this.plugin.saveSettings()
+      })
+    });
+
+    new Setting(containerEl)
+    .setName("Spotify Album template file location")
+    .setDesc("Choose the file to use as a template when creating a new note from a Spotify album.")
+    .addText((text) => {
+      text
+      .setPlaceholder('Example: Templates/Spotify Album Template')
+      .setValue(this.plugin.settings.albumNoteTemplate)
+      .onChange(async value => {
+        this.plugin.settings.albumNoteTemplate = value
+        await this.plugin.saveSettings()
+      })
+    });
+
+    new Setting(containerEl)
+    .setName("Spotify Playlist template file location")
+    .setDesc("Choose the file to use as a template when creating a new note from a Spotify playlist.")
+    .addText((text) => {
+      text
+      .setPlaceholder('Example: Templates/Spotify Playlist Template')
+      .setValue(this.plugin.settings.playlistNoteTemplate)
+      .onChange(async value => {
+        this.plugin.settings.playlistNoteTemplate = value
+        await this.plugin.saveSettings()
+      })
+    });
   }
 }
