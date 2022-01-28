@@ -1,5 +1,6 @@
 import * as React from "react";
 import { deconstructUrl, getTrack, getTrackFeatures, getAudioAnalysis, getArtist, getAlbum, buildSongNote, buildPlaylistNote, findBearerToken, getPlaylist, getAllPlaylistTracks, getWikipediaInfo } from '../utils';
+import { Notice } from "obsidian";
 
 export default function STOPluginHOC(): JSX.Element {
   // Input State
@@ -32,16 +33,10 @@ export default function STOPluginHOC(): JSX.Element {
     }
   }
 
-  const searchTrackHandler = async () => {
-    // Set loading state
-    setIsLoading(true);
+  const getTrackDataFromApi = async () => {
     // Search Spotify for track information
     // Acquire bearer token
     const bearerToken = findBearerToken();
-
-
-    // await getWikipediaInfo('(band) Low');
-
     // Query Spotify API for track info
     const trackData = await getTrack(trackId, bearerToken);
     const artistId = trackData.artists[0].id;
@@ -60,7 +55,23 @@ export default function STOPluginHOC(): JSX.Element {
     setTrackInput("");
     setTrackId("");
     setIsLoading(false);
-    return null;
+  }
+
+  const searchTrackHandler = async () => {
+    // Set loading state
+    setIsLoading(true);
+
+    // await getWikipediaInfo('(band) Low');
+    await getTrackDataFromApi()
+      .then(() => {
+        setIsLoading(false)
+      })
+      .catch(() => {
+        // Your error is here!
+        console.log('error response')
+        new Notice("There was an error with the Spotify API request - Reset your bearer token in the plugin settings");
+        throw new Error('There seems to be a connection issue.')
+      });
   }
 
   const createSongNoteHandler = async () => {
