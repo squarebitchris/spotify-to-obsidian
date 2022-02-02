@@ -10,9 +10,7 @@ import {
   // Vault,
   // Workspace,
 } from "obsidian";
-// import { App, Notice, TFile, normalizePath } from "obsidian";
-
-// Spotify API Resource Functions
+import parseSpotifyUri from 'spotify-uri';
 
 /**
  * Fetches a track object from the Spotify API
@@ -147,6 +145,16 @@ export const getPlaylistTracks = async (id: string, bearerToken: string): Promis
     return spotifyID
   }
   return "";
+}
+
+// Extract ID from URL and find which type of data to fetch
+// Url Formats => 
+// -> "https://open.spotify.com/album/0BwWUstDMUbgq2NYONRqlu?si=5qGtCb3_Qh2SburnU09NtQ"
+// -> "https://open.spotify.com/track/0BwWUstDMUbgq2NYONRqlu?si=5qGtCb3_Qh2SburnU09NtQ"
+// -> "https://open.spotify.com/playlist/62XU0jZ2Zy95d5QQzhFGsq?si=ff104043591d41a5"
+export const getDataFromUrl = (url: string): any => {
+  const parsed = parseSpotifyUri(url);
+  return parsed;
 }
 
 /**

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { deconstructUrl, getTrack, getTrackFeatures, getAudioAnalysis, getArtist, getAlbum, buildSongNote, buildPlaylistNote, findBearerToken, getPlaylist, getAllPlaylistTracks, getWikipediaInfo } from '../utils';
+import { deconstructUrl, getDataFromUrl, getTrack, getTrackFeatures, getAudioAnalysis, getArtist, getAlbum, buildSongNote, buildPlaylistNote, findBearerToken, getPlaylist, getAllPlaylistTracks, getWikipediaInfo } from '../utils';
 import { Notice } from "obsidian";
 
 export default function STOPluginHOC(): JSX.Element {
@@ -26,6 +26,9 @@ export default function STOPluginHOC(): JSX.Element {
     setTrackInput(e.target.value);
     // Validate user input for Spotify ID
     const spotifyID = deconstructUrl(e.target.value);
+
+    const urlData = getDataFromUrl(e.target.value);
+    console.log('urlData', urlData);
     if(spotifyID){
       setTrackId(spotifyID);
     } else {
