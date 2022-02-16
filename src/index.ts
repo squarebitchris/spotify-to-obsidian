@@ -51,9 +51,9 @@ export default class STOPlugin extends Plugin {
     this.registerObsidianProtocolHandler(
       "spotify-auth",
       async (params) => {
-        console.log('spotify-auth params returned', params);
+        // console.log('spotify-auth params returned', params);
         const access_token = getAccessToken(params.hash);
-        console.log('spotify-auth access_token returned', access_token);
+        // console.log('spotify-auth access_token returned', access_token);
         await storeSpotifyToken(access_token);
       }
     );

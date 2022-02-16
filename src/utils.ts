@@ -20,6 +20,7 @@ import parseSpotifyUri from 'spotify-uri';
  */
  export const getTrack = async (id: string, bearerToken: string): Promise<Track> => {
   const trackResponse = await requestAPI(`https://api.spotify.com/v1/tracks/${id}`, bearerToken);
+  // console.log('trackResponse', trackResponse)
   return trackResponse;
 }
 /**
@@ -79,7 +80,6 @@ import parseSpotifyUri from 'spotify-uri';
 
 
 // Track Metadata Functions
-
 /**
  * Fetches a track audio features from the Spotify API
  * @param {string} id - The trackId to fetch data from the Spotify API
@@ -117,9 +117,7 @@ export const getPlaylistTracks = async (id: string, bearerToken: string): Promis
   return playlistTracksResponse;
 }
 
-
 // Request Functions
-
 /**
  * Returns bearer token from plugin settings
  * @returns {Note} - Obsidian Note
@@ -185,7 +183,6 @@ const requestAPI = async (url: string, bearerToken: string): Promise<T> => {
   return JSON.parse(spotifyRequest);
 }
 
-
 /**
  * Paginates through Tracks of a playlist
  * @param {string} playlistId - The Spotify ID of the playlist
@@ -227,7 +224,6 @@ function range(size, startAt = 0) {
   return [...Array(size).keys()].map(i => i + startAt);
 }
 
-
 // // Authentication Functions
 // Params:
 const authEndpoint = 'https://accounts.spotify.com/authorize';
@@ -247,15 +243,15 @@ const SCOPES = [
 const openBrowserWindow = (url: string) => window.location.assign(url);
 
 export const setupSpotifyAuth = async (): Promise<void> => {
-  console.log('Setting up Spotify Auth');
+  // console.log('Setting up Spotify Auth');
   const getAuthorizeHref = `${authEndpoint}?client_id=${CLIENT_ID}&redirect_uri=${AUTH_REDIRECT_URI}&scope=${SCOPES.join("%20")}&response_type=token`;
   openBrowserWindow(getAuthorizeHref);
 }
 
 export const getAccessToken = (hash: string) => {
   const params = new URLSearchParams(hash);
-  console.log('Params', params)
-  console.log('getHashParams', params.get('access_token'))
+  // console.log('Params', params)
+  // console.log('getHashParams', params.get('access_token'))
   return params.get('access_token');
 }
 
@@ -264,7 +260,6 @@ export const storeSpotifyToken = async (token: string) => {
   await window.app.plugins.plugins['spotify-to-obsidian'].saveSettings()
   new Notice("Logged into Spotify successfully");
 }
-
 
 
 // Note Template Functions
@@ -287,7 +282,7 @@ export const loadTemplate = (vault, metadataCache) => async (templatePath: strin
 
       if (!templateFile) {
         const errMsg = `Unable to find template file at ${normalizedTemplatePath}`;
-        console.log(errMsg);
+        // console.log(errMsg);
         new Notice(errMsg);
         return null;
       }
@@ -296,7 +291,7 @@ export const loadTemplate = (vault, metadataCache) => async (templatePath: strin
 
       return templateContents;
     } catch (err) {
-      console.log(`Failed to load template from ${normalizedTemplatePath}`, err);
+      // console.log(`Failed to load template from ${normalizedTemplatePath}`, err);
       new Notice("Failed to load Spotify note template settings");
       return null;
     }
@@ -321,7 +316,7 @@ export const loadTemplate = (vault, metadataCache) => async (templatePath: strin
     // Attempt to load template
     const templateSetting = getTemplateSetting();
     const templateData = await loadTemplate(vault, metadataCache)(templateSetting);
-    console.log('templateData', templateData)
+    // console.log('templateData', templateData)
     // const templateData = templateSetting ? await loadTemplate(vault, metadataCache)(templateSetting) : "";
     let templateContents = "";
     // if a template is found, use it to generate the note contents
@@ -421,9 +416,14 @@ function generateDefaultSongNote(track, artist, album, audioFeatures, audioAnaly
     templateContents += `- Album: [[Album - ${artistName} - ${album.name}]]\n`;
     templateContents += `- Genres: \n`;
     genres.map((tag:string) => (templateContents += `  - [[${tag}]]\n`));
-    templateContents += `- Source Link: [Link](${track.href}) \n`;
+    templateContents += `- Source Link: [Link](https://open.spotify.com/track/${track.id}) \n`;
     templateContents += `- Duration: ${msToMinSec(track.duration_ms)}\n`;
     templateContents += `- Track Popularity: ${track.popularity}\n`;
+    templateContents += '---\n';
+    templateContents += '### Play\n';
+    templateContents += '\n';
+    templateContents += `<iframe src="https://open.spotify.com/embed/track/${track.id}?utm_source=generator" width="100%" height="80" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+    templateContents += '\n\n';
     templateContents += '---\n';
     templateContents += '## Notes\n';
     templateContents += '\n';
@@ -576,7 +576,7 @@ const generateTemplateSongNote = (templateContents, track, artist, album, audioF
       listGenresAsLinks += `  - [[${titleCase(tag)}]]` :  `  - [[${titleCase(tag)}]]\n`
   ));
   // {{SPOTIFY_LINK}}
-  const spotifyLink = `[Link](${track.href})`;
+  const spotifyLink = `[Link](https://open.spotify.com/track/${track.id})`;
   // {{SONG_DURATION}}
   const songDuration = msToMinSec(track.duration_ms);
   // {{SONG_POPULARITY}}
@@ -595,6 +595,13 @@ const generateTemplateSongNote = (templateContents, track, artist, album, audioF
   const albumLabel = album.label;
   // {{ALBUM_IMAGE}}
   const albumImage = album.images[0] ? `![](${album.images[0].url})` : ''; 
+  // {{PLAY_SECTION}}
+  let playSection = '';
+  playSection += '### Play\n';
+  playSection += '\n';
+  playSection += `<iframe src="https://open.spotify.com/embed/track/${track.id}?utm_source=generator" width="100%" height="80" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"></iframe>`;
+  playSection += '\n\n';
+  playSection += '---\n';
   // {{AUDIO_FEATURES_LIST}}
   let audioFeaturesList = '';
   audioFeaturesList += `- Acousticness: ${acousticness}\n`;
@@ -677,6 +684,7 @@ const generateTemplateSongNote = (templateContents, track, artist, album, audioF
     resolved_list_genres_as_links: listGenresAsLinks,
     resolved_spotify_link: spotifyLink,
     resolved_song_duration: songDuration,
+    resolved_play_section: playSection,
     resolved_song_popularity: songPopularity,
     resolved_artist_followers: artistFollowers,
     resolved_artist_popularity: artistPopularity,
@@ -702,6 +710,7 @@ const generateTemplateSongNote = (templateContents, track, artist, album, audioF
     ["SPOTIFY_LINK", (item) => item.resolved_spotify_link ?? "Unknown"],
     ["SONG_DURATION", (item) => item.resolved_song_duration ?? "Unknown"],
     ["SONG_POPULARITY", (item) => item.resolved_song_popularity ?? "Unknown"],
+    ["PLAY_SECTION", (item) => item.resolved_play_section ?? "Unknown"],
     ["ARTIST_FOLLOWERS", (item) => item.resolved_artist_followers ?? "Unknown"],
     ["ARTIST_POPULARITY", (item) => item.resolved_artist_popularity ?? "Unknown"],
     ["ARTIST_IMAGE", (item) => item.resolved_artist_image ?? "Unknown"],
@@ -742,7 +751,7 @@ const generateTemplateSongNote = (templateContents, track, artist, album, audioF
   // templateContents += `genres:\n`;
   // genres.map((tag:string) => (templateContents += `- ${tag}\n`));
 
-  console.log('attempting to create file: ' + normalizedPath);
+  // console.log('attempting to create file: ' + normalizedPath);
   try {
     let templateContents = '---\n';
     templateContents += `tags:\n`;
@@ -752,7 +761,9 @@ const generateTemplateSongNote = (templateContents, track, artist, album, audioF
     templateContents += '---\n';
     templateContents += `- Note Title: ${normalizedPath}\n`;
     templateContents += `- Playlist Title: ${playlistName}\n`;
-    templateContents += `- Source Link: [Link](${playlist.href}) \n`;
+
+    
+    templateContents += `- Source Link: [Link](https://open.spotify.com/playlist/${playlist.id}) \n`;
     templateContents += `- Total Tracks: ${playlist.tracks.total}\n`;
     templateContents += '---\n';
     templateContents += '\n\n';
@@ -791,21 +802,21 @@ const generateTemplateSongNote = (templateContents, track, artist, album, audioF
 
 // miliseconds to minutes:seconds
 export const msToMinSec = (ms: number): string => {
-  console.log('input', ms);
+  // console.log('input', ms);
   const minutes = Math.floor(ms / 60000);
   const seconds = ((ms % 60000) / 1000).toFixed(0);
-  console.log('minutes', minutes);
-  console.log('seconds', seconds);
+  // console.log('minutes', minutes);
+  // console.log('seconds', seconds);
   return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
 }
 
 // seconds to minutes:seconds
 export const secToMinSec = (sec: number): string => {
-  console.log('input', sec);
+  // console.log('input', sec);
   const minutes = Math.floor(sec / 60);
   const seconds = (sec % 60).toFixed(0);
-  console.log('minutes', minutes);
-  console.log('seconds', seconds);
+  // console.log('minutes', minutes);
+  // console.log('seconds', seconds);
   return minutes + ":" + (seconds < 10 ? '0' : '') + seconds;
 }
 

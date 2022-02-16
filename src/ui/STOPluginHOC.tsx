@@ -3,11 +3,10 @@ import { deconstructUrl, getDataFromUrl, getTrack, getTrackFeatures, getAudioAna
 import { Notice } from "obsidian";
 
 export default function STOPluginHOC(): JSX.Element {
+  const [searchMethod, setSearchMethod] = React.useState("track");
   // Input State
   const [trackInput, setTrackInput] = React.useState("");
   const [trackId, setTrackId] = React.useState("");
-  const [playlistInput, setPlaylistInput] = React.useState("");
-  const [playlistId, setPlaylistId] = React.useState("");
   // Query state
   const [track, setTrack] = React.useState({});
   const [audioFeatures, setAudioFeatures] = React.useState({});
@@ -28,7 +27,15 @@ export default function STOPluginHOC(): JSX.Element {
     const spotifyID = deconstructUrl(e.target.value);
 
     const urlData = getDataFromUrl(e.target.value);
-    console.log('urlData', urlData);
+    // console.log('urlData', urlData);
+    if (urlData.type === 'track') {
+      setSearchMethod('track');
+    } else if (urlData.type === 'playlist') {
+      setSearchMethod('playlist');
+    } else {
+      setSearchMethod('track');
+    }
+
     if(spotifyID){
       setTrackId(spotifyID);
     } else {
@@ -60,21 +67,30 @@ export default function STOPluginHOC(): JSX.Element {
     setIsLoading(false);
   }
 
-  const searchTrackHandler = async () => {
+  const searchSpotifyHandler = async () => {
     // Set loading state
     setIsLoading(true);
 
-    // await getWikipediaInfo('(band) Low');
-    await getTrackDataFromApi()
-      .then(() => {
-        setIsLoading(false)
-      })
-      .catch(() => {
-        // Your error is here!
-        console.log('error response')
-        new Notice("There was an error with the Spotify API request - Reset your bearer token in the plugin settings");
-        throw new Error('There seems to be a connection issue.')
-      });
+    // Case method of search method to determine which API to query
+    if (searchMethod === 'track') {
+      // Query Spotify API for track info
+      await getTrackDataFromApi();
+      // await getWikipediaInfo('(band) Low');
+      await getTrackDataFromApi()
+        .then(() => {
+          setIsLoading(false)
+        })
+        .catch(() => {
+          // Your error is here!
+          // console.log('error response')
+          new Notice("There was an error with the Spotify API request - Reset your bearer token in the plugin settings");
+          throw new Error('There seems to be a connection issue.')
+        });
+    } else if (searchMethod === 'playlist') {
+      // Query Spotify API for playlist info
+      await searchPlaylistHandler();
+    }
+
   }
 
   const createSongNoteHandler = async () => {
@@ -82,7 +98,7 @@ export default function STOPluginHOC(): JSX.Element {
     setIsLoading(true);
     // Create note
     const note = await buildSongNote(track, artist, album, audioFeatures, audioAnalysis);
-    console.log('Note Methods', note);
+    // console.log('Note Methods', note);
     setIsLoading(false);
     return null;
   }
@@ -112,37 +128,21 @@ export default function STOPluginHOC(): JSX.Element {
     }
   }
 
-
-  const playlistChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Update the user input state
-    setPlaylistInput(e.target.value);
-    // Validate user input for Spotify ID
-    const spotifyID = deconstructUrl(e.target.value);
-    if(spotifyID){
-      setPlaylistId(spotifyID);
-    } else {
-      setPlaylistId("...");
-    }
-  }
-
   const searchPlaylistHandler = async () => {
     // Set loading state
     setIsLoading(true);
     // Acquire bearer token
     const bearerToken = findBearerToken();
     // Query Spotify API for playlist info
-    const playlistData = await getPlaylist(playlistId, bearerToken);
+    const playlistData = await getPlaylist(trackId, bearerToken);
     // Query Spotify API for playlist tracks
     const trackCount = playlistData.tracks.total;
-    let playlistTracksData = await getAllPlaylistTracks(playlistId, trackCount, bearerToken);
-    console.log('Playlist Data', playlistData);
-    console.log('Playlist Items', playlistTracksData);
+    let playlistTracksData = await getAllPlaylistTracks(trackId, trackCount, bearerToken);
+    // console.log('Playlist Data', playlistData);
+    // console.log('Playlist Items', playlistTracksData);
     // Update state
     setPlaylist(playlistData);
     setPlaylistTracks(playlistTracksData);
-    // Reset input
-    setPlaylistInput("");
-    setPlaylistId("");
     setIsLoading(false);
     return null;
   }
@@ -152,15 +152,13 @@ export default function STOPluginHOC(): JSX.Element {
     setIsLoading(true);
     // Create note
     const note = await buildPlaylistNote(playlist, playlistTracks);
-    console.log('Note Methods', note);
+    // console.log('Note Methods', note);
     setIsLoading(false);
     return null;
   }
 
   const renderPlaylistInfo = () => {
-    if(isLoading){
-      return <h3>Loading...</h3>
-    } else if(isError){
+    if(isError){
       return <h3>Error!</h3>
     } else {
       return (
@@ -185,23 +183,12 @@ export default function STOPluginHOC(): JSX.Element {
         <p>Paste Spotify Track Link</p>
         <input onChange={trackChangeHandler} value={trackInput}></input>
       </div>
-      <p>Track ID: </p>
+      <p>Spotify ID: </p>
       <h4>{trackId}</h4>
-      <button onClick={searchTrackHandler}>
-        Search for Track
+      <button onClick={searchSpotifyHandler}>
+        Search for Track or Playlist
       </button>
       
-      {/* Playlist Query */}
-      <div className="STOPluginHOC__container">
-        <p>Paste Spotify Playlist Link</p>
-        <input onChange={playlistChangeHandler} value={playlistInput}></input>
-      </div>
-      <p>Playlist ID: </p>
-      <h4>{trackId}</h4>
-      <button onClick={searchPlaylistHandler}>
-        Search for Playlist
-      </button>
-
       {/* Card Component for Track Data */}
       {renderTrackInfo()}
 
