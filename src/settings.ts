@@ -2,7 +2,7 @@
 
 import {App, PluginSettingTab, Setting} from 'obsidian'
 import STOPlugin from 'main'
-import { setupSpotifyAuth } from './utils';
+import { setupSpotifyAuth } from "./utils/apiUtils";
 
 
 export interface STOSettings {

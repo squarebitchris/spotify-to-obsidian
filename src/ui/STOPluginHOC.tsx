@@ -1,6 +1,18 @@
 import * as React from "react";
-import { deconstructUrl, getDataFromUrl, getTrack, getTrackFeatures, getAudioAnalysis, getArtist, getAlbum, buildSongNote, buildPlaylistNote, findBearerToken, getPlaylist, getAllPlaylistTracks, getWikipediaInfo } from '../utils';
 import { Notice } from "obsidian";
+import {
+  deconstructUrl,
+  getDataFromUrl,
+  findBearerToken,
+  getTrack,
+  getTrackFeatures,
+  getAudioAnalysis,
+  getArtist,
+  getAlbum,
+  getPlaylist,
+  getAllPlaylistTracks,
+} from "../utils/apiUtils";
+import { buildSongNote, buildPlaylistNote } from "../utils/noteUtils";
 
 export default function STOPluginHOC(): JSX.Element {
   const [searchMethod, setSearchMethod] = React.useState("track");

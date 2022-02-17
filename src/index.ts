@@ -5,7 +5,7 @@ import ReactDOM from "react-dom";
 
 import { DEFAULT_SETTINGS, STOSettings, STOSettingTab } from 'src/settings'
 import STOPluginHOC from "./ui/STOPluginHOC";
-import { getAccessToken, storeSpotifyToken } from "./utils";
+import { getAccessToken, storeSpotifyToken } from "./utils/apiUtils";
 
 const VIEW_TYPE = "react-view-spotify";
 
